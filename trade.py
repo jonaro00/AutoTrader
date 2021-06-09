@@ -54,9 +54,14 @@ async def get_config(device):
 
         device.conf = conf
 
-async def main():
+async def set_setting(device, namespace_and_key, value):
+    """Wraps 'settings put' in adb shell. Sets key in namespace to value."""
+    await device.shell(f'settings put {namespace_and_key} {value}')
+
+async def trade_process():
     """Checks for devices, loads config files from devices,
-    and executes 100 trading sequences."""
+    turns on pointer location, and executes 100 trading sequences."""
+    # Setup & device check
     client = ClientAsync()
     devices = await client.devices()
     if not devices:
@@ -67,6 +72,7 @@ async def main():
         print(device.serial)
     print()
 
+    # Config loading
     try:
         for device in devices:
             await get_config(device)
@@ -77,13 +83,35 @@ async def main():
         return
 
     input('\nPress Enter to start trading sequence...')
-    for i in range(1, 101):
-        print('Starting trade', i)
-        await trade_sequence(devices)
 
-if __name__ == '__main__':
+    # Turn on pointer
+    for device in devices:
+        try:
+            await set_setting(device, 'system pointer_location', 1)
+        except Exception:
+            print('Failed to turn on pointer location on', device.serial)
+
+    # Trade sequence
+    try:
+        for i in range(1, 101):
+            print('Starting trade', i)
+            await trade_sequence(devices)
+    except BaseException as e:
+        # Turn off pointer
+        for device in devices:
+            try:
+                await set_setting(device, 'system pointer_location', 0)
+            except Exception:
+                print('Failed to turn off pointer location on', device.serial)
+        raise e
+
+def main():
     print('\n### AutoTrader by jonaro00 ###\n')
     try:
-        asyncio.run(main())
+        asyncio.run(trade_process())
     except KeyboardInterrupt:
-        exit()
+        return
+
+
+if __name__ == '__main__':
+    main()
