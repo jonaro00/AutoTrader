@@ -1,5 +1,6 @@
 import asyncio
 import json
+import sys
 from time import sleep
 
 from ppadb.client_async import ClientAsync
@@ -58,9 +59,9 @@ async def set_setting(device, namespace_and_key, value):
     """Wraps 'settings put' in adb shell. Sets key in namespace to value."""
     await device.shell(f'settings put {namespace_and_key} {value}')
 
-async def trade_process():
+async def trade_process(n_trades):
     """Checks for devices, loads config files from devices,
-    turns on pointer location, and executes 100 trading sequences."""
+    turns on pointer location, and executes n_trades trading sequences."""
     # Setup & device check
     client = ClientAsync()
     devices = await client.devices()
@@ -82,7 +83,7 @@ async def trade_process():
         print(*e.args)
         return
 
-    input('\nPress Enter to start trading sequence...')
+    input(f'\nPress Enter to start {n_trades} trades (Ctrl+C to cancel)...')
 
     # Turn on pointer
     for device in devices:
@@ -93,7 +94,7 @@ async def trade_process():
 
     # Trade sequence
     try:
-        for i in range(1, 101):
+        for i in range(1, n_trades+1):
             print('Starting trade', i)
             await trade_sequence(devices)
     except BaseException as e:
@@ -105,13 +106,16 @@ async def trade_process():
                 print('Failed to turn off pointer location on', device.serial)
         raise e
 
-def main():
+def main(n_trades=100):
     print('\n### AutoTrader by jonaro00 ###\n')
     try:
-        asyncio.run(trade_process())
+        asyncio.run(trade_process(n_trades))
     except KeyboardInterrupt:
         return
 
 
 if __name__ == '__main__':
-    main()
+    if len(sys.argv) >= 2:
+        main(int(sys.argv[1]))
+    else:
+        main()
