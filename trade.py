@@ -1,5 +1,6 @@
 import asyncio
 import json
+import json.decoder
 import sys
 from time import sleep
 
@@ -11,7 +12,7 @@ CONFIG_FILE_NAME = 'AutoTraderConfig.json'
 TMP_FILE_PATH    = 'tmp.json'
 
 BUTTON_COORDS = ('TRADE_BTN', 'FIRST_PKMN_BTN', 'NEXT_BTN', 'CONFIRM_BTN', 'X_BTN')
-SLEEP_DELAYS  = (4, 2, 2, 19, 1)
+SLEEP_DELAYS  = (7, 1, 5, 21, 1)
 
 async def tap(dev, point):
     """Sends a tap at point to device."""
@@ -36,24 +37,29 @@ async def get_config(device):
     config_file_path = CONFIG_FILE_DIR + CONFIG_FILE_NAME
     await device.pull(config_file_path, TMP_FILE_PATH)
     with open(TMP_FILE_PATH, 'rb') as f:
+        if f.read(1) == b'':
+            raise LookupError(f'Found no config file ({device.serial} {config_file_path})')
+        f.seek(0, 0)
         try:
             conf = json.load(f)
         except Exception as e:
-            raise LookupError(f'Found no config file ({config_file_path})') from e
-        if not set(BUTTON_COORDS) <= set(conf.keys()):
-            raise KeyError(
-                f'Missing config key(s):\nRequired: {BUTTON_COORDS}\nFound:    {tuple(conf.keys())}'
-                )
-        try:
-            for coords in conf.values():
-                assert isinstance(coords[0], int)
-                assert isinstance(coords[1], int)
-        except Exception as e:
-            raise TypeError(
-                f'Invalid coords format in config (should be list of two integers):\n{conf}'
+            raise ValueError(
+                f'Error while parsing config file ({device.serial} {config_file_path})'
                 ) from e
+    if not set(BUTTON_COORDS) <= set(conf.keys()):
+        raise KeyError(
+            f'Missing config key(s):\nRequired: {BUTTON_COORDS}\nFound:    {tuple(conf.keys())}'
+            )
+    try:
+        for coords in conf.values():
+            assert isinstance(coords[0], int)
+            assert isinstance(coords[1], int)
+    except Exception as e:
+        raise TypeError(
+            f'Invalid coords format in config (should be list of two integers):\n{conf}'
+            ) from e
 
-        device.conf = conf
+    device.conf = conf
 
 async def set_setting(device, namespace_and_key, value):
     """Wraps 'settings put' in adb shell. Sets key in namespace to value."""

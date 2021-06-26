@@ -1,7 +1,7 @@
 {
-    "TRADE_BTN":      [0, 0],
-    "FIRST_PKMN_BTN": [0, 0],
-    "NEXT_BTN":       [0, 0],
-    "CONFIRM_BTN":    [0, 0],
-    "X_BTN":          [0, 0]
+    "TRADE_BTN":      [X, Y],
+    "FIRST_PKMN_BTN": [X, Y],
+    "NEXT_BTN":       [X, Y],
+    "CONFIRM_BTN":    [X, Y],
+    "X_BTN":          [X, Y]
 }
