@@ -42,7 +42,7 @@ async def get_config(device):
         f.seek(0, 0)
         try:
             conf = json.load(f)
-        except Exception as e:
+        except json.decoder.JSONDecodeError as e:
             raise ValueError(
                 f'Error while parsing config file ({device.serial} {config_file_path})'
                 ) from e
@@ -54,7 +54,7 @@ async def get_config(device):
         for coords in conf.values():
             assert isinstance(coords[0], int)
             assert isinstance(coords[1], int)
-    except Exception as e:
+    except AssertionError as e:
         raise TypeError(
             f'Invalid coords format in config (should be list of two integers):\n{conf}'
             ) from e
@@ -104,13 +104,14 @@ async def trade_process(n_trades):
             print('Starting trade', i)
             await trade_sequence(devices)
     except BaseException as e:
+        raise e
+    finally:
         # Turn off pointer
         for device in devices:
             try:
                 await set_setting(device, 'system pointer_location', 0)
             except Exception:
                 print('Failed to turn off pointer location on', device.serial)
-        raise e
 
 def main(n_trades=100):
     print('\n### AutoTrader by jonaro00 ###\n')
