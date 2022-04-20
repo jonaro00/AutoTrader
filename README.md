@@ -22,7 +22,7 @@ Go to **Settings > About phone > Software Information** and tap *Build Number* u
 
 #### 2. Enable USB debugging
 
-Go to **Settings > Developer options**, find and enable *USB debugging*.
+Go to **Settings > Developer options** and enable *USB debugging*.
 
 #### 3. Connect adb with phone
 
@@ -34,11 +34,11 @@ Check that your device is connected with `adb devices`.
 
 #### 4. [Optional] Configure wireless adb
 
-*Optionally, you can let adb communicate over Wifi instead of the USB cable. This requires that the computer and phone is connected to the same local network.*
+*Optionally, you can let adb communicate over Wifi instead of the USB cable. **This requires that the computer and phone is connected to the same local network.***
 
 While connected with cable, use `adb tcpip 5555` to enable adb over Wifi on the phone. After this, the phone can be unplugged.
 
-Check your phone's IP address in **Settings > About phone > Status > IP address**. It usually starts with `192.168`.
+Check your phone's IP address in **Settings > About phone > Status**. It usually starts with `192.168`.
 
 Use `adb connect <ipaddress>` and press *Allow* on the prompt.
 
@@ -66,7 +66,7 @@ Once the coordinates are in the config file, use `adb push MyPhone.json /storage
 
 Create a tag with all the Pokémon to trade.
 
-Start a trade manually and search for the tag. Complete the trade. The search will now be remembered in the upcoming trades.
+Start a trade manually and search for the tag. Complete the trade. The search query for the tag will now be remembered in the upcoming trades.
 
 ### Using the script
 
@@ -79,8 +79,8 @@ Execute the script with
 
 where *n_trades* is the number of trades to perform (default is 100).
 
-The script checks for devices and loads config files. Then, after a confirmation from the user, it turns on the Pointer location tool (to visualize the automated taps), and executes *n_trades* trading sequences.
+The script checks for devices and loads config files. Then, after a confirmation from the user, it turns on the *Pointer location* tool (to visualize the automated taps), and executes *n_trades* trading sequences.
 
 To cancel the trading process, press Ctrl+C.
 
-When finished or cancelled, the Pointer location tool is turned off. If this fails, it can be turned off in Developer options.
+When the script is finished or cancelled, the *Pointer location* tool is turned off. If this fails, it can be turned off in **Settings > Developer options > Pointer location**.
