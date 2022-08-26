@@ -4,13 +4,22 @@ AutoTrader is a Python script that lets 2 (or more 😳) Android phones automate
 
 ## Requirements
 
+- Two (or more) Android devices
+- PC with Python 3.10+ and Android Debug Bridge
+- At least one USB cable to connect PC and devices
+- [Optional] Wifi on the same network as the PC
+
 ## Disclaimer
+
+This is a simple tool to make trading less boring. It is not error free, keep an eye out while it is running.
 
 ## Setup
 
+Start off by cloning or downloading the files in this repo.
+
 ### Setting up Python
 
-Install Python 3.8 or higher.
+Install Python 3.10 or higher.
 
 Install required packages with `pip install -r requirements.txt`.
 
@@ -49,6 +58,8 @@ Check that your device is connected with `adb devices`.
 This time, the IP address along with the status 'authenticated' should be in the list.
 
 ### Upload configuration for AutoTrader to phone
+
+*NOTE: This only needs to be done once per device used!*
 
 In order to know where to tap on the screen, AutoTrader reads a config file `AutoTraderConfig.json` from your phone.
 This section covers how to create and upload that file.
