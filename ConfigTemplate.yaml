@@ -1,0 +1,13 @@
+# Make a copy of this file, and fill in the coordinates for each button.
+# See README.md for full instructions.
+
+# Trade button on the friend screen
+TRADE_BTN:      [X, Y]
+# Top left slot in Pokémon selection menu
+FIRST_PKMN_BTN: [X, Y]
+# "Next" button after selecting a Pokémon to trade
+NEXT_BTN:       [X, Y]
+# Confirm trade button
+CONFIRM_BTN:    [X, Y]
+# 'X' button at the bottom to close a menu
+X_BTN:          [X, Y]

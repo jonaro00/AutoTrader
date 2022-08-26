@@ -1,28 +1,37 @@
 #!/usr/bin/python3
-
 """
 AutoTrader, a script for automating trading in Pokémon GO on Android.
 Author: jonaro00
 """
 
 import asyncio
-import json
-from json.decoder import JSONDecodeError
 import time
+from pathlib import Path
 
+import yaml
 from ppadb.client_async import ClientAsync
 from ppadb.device_async import DeviceAsync
+from yaml.parser import ParserError
 
 
 CONFIG_FILE_DIR  = '/storage/self/primary/'
-CONFIG_FILE_NAME = 'AutoTraderConfig.json'
-TMP_FILE_PATH    = 'tmp.json'
+CONFIG_FILE_NAME = 'AutoTraderConfig.yaml'
+TMP_FILE_PATH    = Path('tmp.yaml')
+CONFIG = dict[str, list[int]]
 
 BUTTON_COORDS = ('TRADE_BTN', 'FIRST_PKMN_BTN', 'NEXT_BTN', 'CONFIRM_BTN', 'X_BTN')
 SLEEP_DELAYS  = (7, 1, 5, 21, 1)
 
 
-async def tap(device: DeviceAsync, point: 'tuple[int, int]') -> None:
+class DeviceAsyncWrapper(DeviceAsync):
+    config: CONFIG
+
+
+class AutoTraderError(Exception):
+    pass
+
+
+async def tap(device: DeviceAsyncWrapper, point: list[int]):
     """Sends a tap at point to device."""
     x, y = point
     # Uses a tiny swipe over 100 ms for increased reliability
@@ -30,61 +39,55 @@ async def tap(device: DeviceAsync, point: 'tuple[int, int]') -> None:
     await device.shell(f'input swipe {x} {y} {x+1} {y+1} 100')
 
 
-async def trade_sequence(devices: 'list[DeviceAsync]') -> None:
+async def trade_sequence(devices: list[DeviceAsyncWrapper]):
     """Sends taps to devices in a sequence with delays
     to complete a trade process. Device must have
-    button coordinates stored in attribute 'conf'."""
+    button coordinates stored in attribute `config`."""
     for btn, delay in zip(BUTTON_COORDS, SLEEP_DELAYS):
-        commands = (tap(dev, dev.conf[btn]) for dev in devices)
+        commands = (tap(dev, dev.config[btn]) for dev in devices)
         print('    Sending', btn)
         await asyncio.gather(*commands)
-        time.sleep(delay)
-        # await asyncio.sleep(delay)
+        await asyncio.sleep(delay)
 
 
-async def trade_process(devices: 'list[DeviceAsync]', n_trades: int, total: int) -> int:
-    """Executes `n_trades` trading sequences. Returns number of trades completed."""
+async def trade_process(devices: list[DeviceAsyncWrapper], n_trades: int):
+    """Executes `n_trades` trading sequences."""
     if n_trades < 1:
-        return 0
+        return
     await pointer(devices, True)
     try:
         for i in range(1, n_trades+1):
-            print(f'  Starting trade {i} of {n_trades} ({total+i} total)')
+            print(f'  Starting trade {i} of {n_trades}')
             await trade_sequence(devices)
-        i += 1
     finally:
         await pointer(devices, False)
-        return i-1
 
 
-async def get_config(device: DeviceAsync) -> 'dict[str, list[int, int]]':
-    """Pulls config file from device and parses it. Sets the `conf` attribute on success."""
+async def get_config(device: DeviceAsyncWrapper) -> CONFIG:
+    """Pulls config file from device and parses it. Sets the `config` attribute on success."""
     config_file_path = CONFIG_FILE_DIR + CONFIG_FILE_NAME
     await device.pull(config_file_path, TMP_FILE_PATH)
-    with open(TMP_FILE_PATH, 'rb') as f:
-        if f.read(1) == b'':
-            raise LookupError(f'Found no config file at {config_file_path}')
-        f.seek(0, 0)
-        try:
-            conf = json.load(f)
-        except JSONDecodeError as e:
-            raise ValueError(f'Error while parsing config file {config_file_path}') from e
-    assert isinstance(conf, dict), f'Incorrect config file format (should be an object with keys)'
-    if not set(BUTTON_COORDS) <= set(conf.keys()):
-        raise KeyError(f'Missing config key(s): {set(BUTTON_COORDS) - set(conf.keys())}')
-    for coords in conf.values():
+    content = TMP_FILE_PATH.read_text()
+    TMP_FILE_PATH.unlink()
+    if not content:
+        raise AutoTraderError(f'Found no config file at {config_file_path}')
+    config: CONFIG = yaml.safe_load(content)
+    assert isinstance(config, dict), f'Incorrect config file format (should be an object with keys)'
+    if not set(BUTTON_COORDS) <= set(config.keys()):
+        raise AutoTraderError(f'Missing config key(s): {set(BUTTON_COORDS) - set(config.keys())}')
+    for coords in config.values():
         assert isinstance(coords, list) and all(map(lambda i: isinstance(i, int), coords)),\
             f'Invalid coords format in config (should be list with two integers)'
-    device.conf = conf
-    return conf
+    device.config = config
+    return config
 
 
-async def set_setting(device: DeviceAsync, namespace_and_key: str, value) -> None:
+async def set_setting(device: DeviceAsyncWrapper, namespace_and_key: str, value):
     """Wraps 'settings put' in adb shell. Sets key in namespace to value."""
     await device.shell(f'settings put {namespace_and_key} {value}')
 
 
-async def pointer(devices: 'list[DeviceAsync]', on: bool) -> None:
+async def pointer(devices: list[DeviceAsyncWrapper], on: bool):
     """Turns on/off pointer location setting on all `devices`."""
     for device in devices:
         try:
@@ -93,12 +96,12 @@ async def pointer(devices: 'list[DeviceAsync]', on: bool) -> None:
             print(f'Failed to turn {"on" if on else "off"} pointer location on', device.serial)
 
 
-async def setup() -> 'list[DeviceAsync]':
+async def setup() -> list[DeviceAsyncWrapper]:
     """Checks for devices and loads config files from devices."""
     client = ClientAsync()
-    devices: list[DeviceAsync] = await client.devices()
+    devices: list[DeviceAsyncWrapper] = await client.devices()
     if not devices:
-        raise RuntimeError('No devices found')
+        raise AutoTraderError('No devices found')
     print('Found devices:')
     for device in devices:
         print(' ', device.serial)
@@ -107,55 +110,57 @@ async def setup() -> 'list[DeviceAsync]':
         for device in devices:
             await get_config(device)
             print('Successfully loaded config from', device.serial)
-    except Exception as e:
-        raise RuntimeError(f'Failed to load config from {device.serial}:', *e.args)
+    except (AutoTraderError, AssertionError, ParserError) as e:
+        raise AutoTraderError(f'Failed to load config from {device.serial}', *e.args) from e
     return devices
 
 
-async def interface() -> None:
+def interface():
     """Runs the main loop asking for user input."""
-    devices: list[DeviceAsync] = await setup()
-    total = 0
+    print(
+        '\n'
+        ' ##                          ## \n'
+        '##   AutoTrader by jonaro00   ##\n'
+        ' ##                          ## \n'
+    )
+    devices: list[DeviceAsyncWrapper] = asyncio.run(setup())
     while True:
         print()
         try:
-            if total:
-                print(f'[{total} total]')
-            i = input("Number of trades? ('q' to quit) > ")
-            if i in ('q', 'Q'):
+            i = input("Number of trades? ('q' to quit) > ").strip()
+            if i.lower() == 'q':
                 break
-            n = int(i)
+            assert (n := int(i)) > 0
         except KeyboardInterrupt:
             print('\nDouble press interrupt to quit')
-            time.sleep(0.5)
+            try:
+                time.sleep(0.5)
+            except KeyboardInterrupt:
+                break
             continue
         except EOFError:
             break
-        except ValueError:
+        except (ValueError, AssertionError):
             print('Enter a positive integer')
             continue
         try:
             print(f'Starting {n} trades (Ctrl+C to cancel)...')
-            total += await trade_process(devices, n, total)
+            asyncio.run(trade_process(devices, n))
         except KeyboardInterrupt:
             continue
         except Exception as e:
             print(e)
 
 
-def main() -> None:
-    print()
-    print(' ##                          ## ')
-    print('##   AutoTrader by jonaro00   ##')
-    print(' ##                          ## ')
-    print()
+def main():
     try:
-        asyncio.run(interface())
-    except RuntimeError as e:
-        print('\n'.join(e.args))
-        return
+        interface()
+    except AutoTraderError as e:
+        print('\n'.join(map(str, e.args)))
+    except Exception as e:
+        print('Unexpected error:', e.__class__.__name__, e.args)
     except KeyboardInterrupt:
-        return
+        pass
 
 
 if __name__ == '__main__':
