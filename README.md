@@ -1,6 +1,6 @@
 # AutoTrader
 
-AutoTrader is a Python script that lets 2 (or more 😳) Android phones automate trading in Pokémon GO by sending *taps* to the screen. The communication with the device is done with Android Debug Bridge (adb).
+AutoTrader is a Python script that lets 2 (or more 😳) **Android** phones automate trading in Pokémon GO by sending *taps* to the screen. The communication with the device is done with Android Debug Bridge (adb).
 
 ## Requirements
 
@@ -12,6 +12,10 @@ AutoTrader is a Python script that lets 2 (or more 😳) Android phones automate
 ## Disclaimer
 
 This is a simple tool to make trading less boring. It is not error free, keep an eye out while it is running.
+
+## License
+
+MIT License
 
 ## Setup
 
@@ -25,7 +29,9 @@ Install required packages with `pip install -r requirements.txt`.
 
 ### Setting up adb (Android Debug Bridge)
 
-TODO
+Follow the instructions to download adb: <https://developer.android.com/studio/releases/platform-tools>
+
+Make sure that `adb` can be used from the command line. Simplest way is to add the `platform-tools` folder (unzipped) to `PATH`.
 
 ### Connecting a phone
 
