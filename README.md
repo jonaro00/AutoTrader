@@ -67,11 +67,11 @@ This time, the IP address along with the status 'authenticated' should be in the
 
 *NOTE: This only needs to be done once per device used!*
 
-In order to know where to tap on the screen, AutoTrader reads a config file `AutoTraderConfig.json` from your phone.
+In order to know where to tap on the screen, AutoTrader reads a config file `AutoTraderConfig.yaml` from your phone.
 This section covers how to create and upload that file.
 
-Make a copy of the file `ConfigTemplate.json` and call it whatever you like.
-In this example it will be called `MyPhone.json`.
+Make a copy of the file `ConfigTemplate.yaml` and call it whatever you like.
+In this example it will be called `MyPhone.yaml`.
 Edit this file and replace the `[X, Y]` with the X and Y coordinates of the respective button.
 The coordinates only need to be *on* the button, they don't need to be precise at all.
 To find the coordinates, turn on the Pointer location tool (**Settings > Developer options > Pointer location**), enter a trade, and read the coordinates from the `X:` and `Y:` fields at the top while holding your finger on the desired button.
@@ -83,7 +83,7 @@ To find the coordinates, turn on the Pointer location tool (**Settings > Develop
 - **CONFIRM_BTN** is the button on the left hand side of the trade screen to confirm the trade.
 - **X_BTN** is the button to close the Pokémon screen after the trade is done.
 
-Once the coordinates are in the config file, use `adb push MyPhone.json /storage/self/primary/AutoTraderConfig.json` to upload it.
+Once the coordinates are in the config file, use `adb push MyPhone.yaml /storage/self/primary/AutoTraderConfig.yaml` to upload it.
 
 ## Usage
 
