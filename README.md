@@ -11,7 +11,9 @@ AutoTrader is a Python script that lets 2 (or more 😳) **Android** phones auto
 
 ## Disclaimer
 
-This is a simple tool to make trading less boring. It is not error free, keep an eye out while it is running.
+This is a simple tool to make trading less boring.
+It is not error free.
+Keep an eye out on the phones while the script is running.
 
 ## License
 
@@ -55,9 +57,10 @@ Optionally, you can let adb communicate over Wifi instead of the USB cable.
 **This requires that the computer and phone is connected to the same local network**.
 If using USB cables is fine, continue to the next section.
 
-While connected with cable, use `adb tcpip 5555` to enable adb over Wifi on the phone.
+Connect the phone's Wifi to the same network that the computer is on.
+While connected with USB cable, use `adb tcpip 5555` to enable adb over Wifi on the phone.
 After this, the phone can be unplugged.
-Check your phone's local IP address in **Settings > About phone > Status**, it likely looks something like *192.168.x.x*.
+Check your phone's local IP address in **Settings > About phone > Status**, it probably looks something like *192.168.x.x*.
 Then, enter it with the command `adb connect <ipaddress>`.
 A prompt should show up on the phone again, press *Allow*.
 Check that your device is connected with `adb devices`.
@@ -67,7 +70,9 @@ This time, the IP address along with the status 'authenticated' should be in the
 
 *NOTE: This only needs to be done once per device used!*
 
-In order to know where to tap on the screen, AutoTrader reads a config file `AutoTraderConfig.yaml` from your phone.
+In order to know where to tap on the screen, AutoTrader reads a config file `AutoTraderConfig.yaml` from the phone.
+It should contain the coordinates of each button for that phone.
+This means that phones with identical screen resolutions can probably use the same config file.
 This section covers how to create and upload that file.
 
 Make a copy of the file `ConfigTemplate.yaml` and call it whatever you like.
@@ -83,9 +88,21 @@ To find the coordinates, turn on the Pointer location tool (**Settings > Develop
 - **CONFIRM_BTN** is the button on the left hand side of the trade screen to confirm the trade.
 - **X_BTN** is the button to close the Pokémon screen after the trade is done.
 
+Below is an example of a completed config file for a Samsung Galaxy M21 (1080 x 2340 px):
+
+```yml
+TRADE_BTN:      [890, 1625]
+FIRST_PKMN_BTN: [195,  625]
+NEXT_BTN:       [540, 1860]
+CONFIRM_BTN:    [153, 1150]
+X_BTN:          [540, 2075]
+```
+
 Once the coordinates are in the config file, use `adb push MyPhone.yaml /storage/self/primary/AutoTraderConfig.yaml` to upload it.
 
 ## Usage
+
+How to use the script when everything is ready.
 
 ### In-game preparation
 
@@ -95,7 +112,7 @@ Start a trade manually and search for the tag.
 Complete the trade.
 The search query for the tag will now be remembered in the upcoming trades.
 
-### Using the script
+### Running the script
 
 Connect 2 phones to adb with the steps above.
 
@@ -107,7 +124,7 @@ Execute the script with
 The script starts by checking for connected devices, then loads config files, and prompts the user with how many trades to perform, after which the trading begins.
 
 The trading process turns on the *Pointer location* tool, both to visualize the automated taps and to serve as an indicator that the script is running.
-To cancel the trading process, press Ctrl+C.
+To cancel the trading process, press **Ctrl+C**.
 
-When a trading batch is finished or cancelled, the *Pointer location* tool is turned off.
+When trading has finished or is cancelled, the *Pointer location* tool is turned off.
 If this fails, it can be turned off manually in **Settings > Developer options > Pointer location**.
