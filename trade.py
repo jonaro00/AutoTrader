@@ -8,11 +8,15 @@ import asyncio
 import time
 from pathlib import Path
 
-import yaml
-from ppadb.client_async import ClientAsync
-from ppadb.device_async import DeviceAsync
-from yaml.parser import ParserError
-
+try:
+    import yaml
+    from ppadb.client_async import ClientAsync
+    from ppadb.device_async import DeviceAsync
+    from yaml.parser import ParserError
+except ModuleNotFoundError as e:
+    print(e)
+    print('Run "pip install -r requirements.txt" to install required packages.')
+    exit(1)
 
 CONFIG_FILE_DIR  = '/storage/self/primary/'
 CONFIG_FILE_NAME = 'AutoTraderConfig.yaml'
