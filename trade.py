@@ -5,13 +5,14 @@ Author: jonaro00
 """
 
 import asyncio
+from dataclasses import dataclass
 import time
 from pathlib import Path
 
 try:
-    import yaml
     from ppadb.client_async import ClientAsync
     from ppadb.device_async import DeviceAsync
+    import yaml
     from yaml.parser import ParserError
 except ModuleNotFoundError as e:
     print(e)
@@ -23,8 +24,43 @@ CONFIG_FILE_NAME = 'AutoTraderConfig.yaml'
 TMP_FILE_PATH    = Path('tmp.yaml')
 CONFIG = dict[str, list[int]]
 
-BUTTON_COORDS = ('TRADE_BTN', 'FIRST_PKMN_BTN', 'NEXT_BTN', 'CONFIRM_BTN', 'X_BTN')
-SLEEP_DELAYS  = (7, 1, 5, 21, 1)
+
+@dataclass
+class Button:
+    name: str
+    delay_after: float
+    use_delay_modifier: bool
+
+
+BUTTONS = [
+    Button(
+        'TRADE_BTN',
+        7,
+        True,
+    ),
+    Button(
+        'FIRST_PKMN_BTN',
+        1,
+        False,
+    ),
+    Button(
+        'NEXT_BTN',
+        5,
+        True,
+    ),
+    Button(
+        'CONFIRM_BTN',
+        21,
+        True,
+    ),
+    Button(
+        'X_BTN',
+        1,
+        False,
+    ),
+]
+BUTTON_NAMES = set(btn.name for btn in BUTTONS)
+SLEEP_MODIFIER = 0
 
 
 class DeviceAsyncWrapper(DeviceAsync):
@@ -47,9 +83,11 @@ async def trade_sequence(devices: list[DeviceAsyncWrapper]):
     """Sends taps to devices in a sequence with delays
     to complete a trade process. Device must have
     button coordinates stored in attribute `config`."""
-    for btn, delay in zip(BUTTON_COORDS, SLEEP_DELAYS):
-        commands = (tap(dev, dev.config[btn]) for dev in devices)
-        print('    Sending', btn)
+    global SLEEP_MODIFIER
+    for btn in BUTTONS:
+        delay = max(btn.delay_after + (SLEEP_MODIFIER if btn.use_delay_modifier else 0), 0)
+        commands = (tap(dev, dev.config[btn.name]) for dev in devices)
+        print('    Sending', btn.name)
         await asyncio.gather(*commands)
         await asyncio.sleep(delay)
 
@@ -77,8 +115,8 @@ async def get_config(device: DeviceAsyncWrapper) -> CONFIG:
         raise AutoTraderError(f'Found no config file at {config_file_path}')
     config: CONFIG = yaml.safe_load(content)
     assert isinstance(config, dict), f'Incorrect config file format (should be an object with keys)'
-    if not set(BUTTON_COORDS) <= set(config.keys()):
-        raise AutoTraderError(f'Missing config key(s): {set(BUTTON_COORDS) - set(config.keys())}')
+    if not BUTTON_NAMES <= set(config.keys()):
+        raise AutoTraderError(f'Missing config key(s): {BUTTON_NAMES - set(config.keys())}')
     for coords in config.values():
         assert isinstance(coords, list) and all(map(lambda i: isinstance(i, int), coords)),\
             f'Invalid coords format in config (should be list with two integers)'
@@ -121,6 +159,7 @@ async def setup() -> list[DeviceAsyncWrapper]:
 
 def interface():
     """Runs the main loop asking for user input."""
+    global SLEEP_MODIFIER
     print(
         '\n'
         ' ##                          ## \n'
@@ -132,8 +171,16 @@ def interface():
         print()
         try:
             i = input("Number of trades? ('q' to quit) > ").strip()
-            if i.lower() == 'q':
+            il = i.lower()
+            if il == 'q':
                 break
+            if il.startswith('delay'):
+                args = i.split()
+                args_l = len(args)
+                if args_l == 2:
+                    SLEEP_MODIFIER = float(args[1])
+                print('Current extra delay:', SLEEP_MODIFIER)
+                continue
             assert (n := int(i)) > 0
         except KeyboardInterrupt:
             print('\nDouble press interrupt to quit')

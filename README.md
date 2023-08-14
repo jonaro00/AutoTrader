@@ -128,3 +128,10 @@ To cancel the trading process, press **Ctrl+C**.
 
 When trading has finished or is cancelled, the *Pointer location* tool is turned off.
 If this fails, it can be turned off manually in **Settings > Developer options > Pointer location**.
+
+#### Custom delay between taps
+
+Some devices and enviroments might experience more or less lag than what the default values are tailored for.
+When in the `Number of trades?` prompt, use the command `delay` to get and `delay <value>` to set the delay modifier.
+The value can be any floating point number, such as `3`, `3.5`, `0`, or even `-1` if you are feeling brave.
+By default, it only affects the **TRADE_BTN**, **NEXT_BTN**, and **CONFIRM_BTN** timings, since those are the ones that involve waiting for the game server.
