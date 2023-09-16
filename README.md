@@ -12,7 +12,9 @@ AutoTrader is a Python script that lets 2 (or more 😳) **Android** phones auto
 ## Disclaimer
 
 This is a simple tool to make trading less boring.
-It is not error free.
+The absence of batch trading in the game is the main issue/motivator for this project.
+
+Using the script is not error free.
 Keep an eye out on the phones while the script is running.
 
 ## License
