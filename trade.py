@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 """
 AutoTrader, a script for automating trading in Pokémon GO on Android.
 Author: jonaro00
