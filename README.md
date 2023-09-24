@@ -27,9 +27,34 @@ Start off by cloning or downloading the files in this repo.
 
 ### Setting up Python
 
-Install Python 3.10 or higher.
+Install Python 3.10 or higher ([download page](https://www.python.org/downloads/)).
 
-Install required packages with `pip install -r requirements.txt`.
+Move to this directory in your shell and install required packages with `pip install -r requirements.txt` (or set up a virtual environment first; see below).
+
+#### Using a venv (optional)
+
+Setting up a Python virtual environment (venv) before installing the dependencies is recommended on Linux,
+but also if you are using Python for many things on your system.
+
+If you use a venv, remember to do the activate step before running the `trade.py` script.
+
+The easiest way to get started:
+
+```powershell
+# Windows (cmd)
+python -m venv venv
+venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+```sh
+# Linux (bash/zsh)
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+```
+
+Refer to the [official documentation](https://docs.python.org/3/library/venv.html) for other options and more details.
 
 ### Setting up adb (Android Debug Bridge)
 
