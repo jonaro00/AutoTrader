@@ -35,7 +35,7 @@ class Button:
 BUTTONS = [
     Button(
         'TRADE_BTN',
-        7,
+        6,
         True,
     ),
     Button(
@@ -45,12 +45,12 @@ BUTTONS = [
     ),
     Button(
         'NEXT_BTN',
-        5,
+        4,
         True,
     ),
     Button(
         'CONFIRM_BTN',
-        21,
+        15,
         True,
     ),
     Button(
